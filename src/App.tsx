@@ -17,17 +17,68 @@ import {
   Lightbulb,
   Thermometer,
   MoonStar,
-  Info
+  Info,
+  Medal,
+  Award,
+  ShieldCheck,
+  Star,
+  Share2,
+  Download
 } from 'lucide-react';
 import { useProgress } from './hooks/useProgress';
 
 type TabType = '2020' | 'nearfar' | 'fig8';
 
 export default function App() {
-  const { progress, awardPoints } = useProgress();
+  const { progress, awardPoints, incrementShares, incrementInstalls } = useProgress();
   const [activeTab, setActiveTab] = useState<TabType>('2020');
   const [isDark, setIsDark] = useState(true);
   const [notif, setNotif] = useState<{ msg: string; icon: React.ReactNode } | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', () => {
+      incrementInstalls();
+      showNotif("App installed successfully!", <Download size={18} />);
+    });
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, [incrementInstalls]);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'EyeTrain 2.0',
+      text: 'Train your eyes and reduce digital fatigue with EyeTrain 2.0!',
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        incrementShares();
+        showNotif("Shared successfully!", <Share2 size={18} />);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        incrementShares();
+        showNotif("Link copied to clipboard!", <Share2 size={18} />);
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
 
   const showNotif = (msg: string, icon: React.ReactNode) => {
     setNotif({ msg, icon });
@@ -109,11 +160,52 @@ export default function App() {
         </section>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <StatCard value={progress.sessions} label="Sessions" icon={<Zap size={14} className="text-accent" />} />
           <StatCard value={`${progress.streak}🔥`} label="Streak" icon={<Flame size={14} className="text-orange-500" />} />
           <StatCard value={progress.points} label="Points" icon={<Trophy size={14} className="text-accent-3" />} />
+          <StatCard value={progress.installs} label="Downloads" icon={<Download size={14} className="text-blue-400" />} />
+          <StatCard value={progress.shares} label="Shared" icon={<Share2 size={14} className="text-purple-400" />} />
         </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 justify-center">
+          <button 
+            onClick={handleShare}
+            className="flex items-center gap-2 bg-bg-card border border-white/5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-bg-mid transition-all"
+          >
+            <Share2 size={14} className="text-purple-400" /> Share App
+          </button>
+          {deferredPrompt && (
+            <button 
+              onClick={handleInstall}
+              className="flex items-center gap-2 bg-bg-card border border-white/5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-bg-mid transition-all"
+            >
+              <Download size={14} className="text-blue-400" /> Install App
+            </button>
+          )}
+        </div>
+
+        {/* Badges */}
+        <AnimatePresence>
+          {progress.badges.length > 0 && (
+            <motion.section 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="bg-bg-card border border-white/5 rounded-2xl p-4 overflow-hidden"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Medal size={16} className="text-accent" />
+                <h3 className="text-xs font-bold uppercase tracking-widest text-text-lo">Earned Badges</h3>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {progress.badges.map(badge => (
+                  <BadgeItem key={badge} type={badge as any} />
+                ))}
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
 
         {/* Tabs */}
         <nav className="bg-bg-card border border-white/5 p-1.5 rounded-2xl flex gap-1">
@@ -472,5 +564,44 @@ function TipCard({ icon, title, text }: { icon: React.ReactNode; title: string; 
       <h4 className="font-bold text-sm">{title}</h4>
       <p className="text-xs text-text-lo leading-relaxed">{text}</p>
     </div>
+  );
+}
+
+function BadgeItem({ type }: { type: '7-day' | '30-day' | '90-day'; key?: string }) {
+  const config = {
+    '7-day': {
+      icon: <Star size={18} />,
+      label: '7 Day Streak',
+      color: 'text-blue-400',
+      bg: 'bg-blue-400/10',
+      border: 'border-blue-400/20'
+    },
+    '30-day': {
+      icon: <ShieldCheck size={18} />,
+      label: '30 Day Streak',
+      color: 'text-purple-400',
+      bg: 'bg-purple-400/10',
+      border: 'border-purple-400/20'
+    },
+    '90-day': {
+      icon: <Award size={18} />,
+      label: '90 Day Streak',
+      color: 'text-yellow-400',
+      bg: 'bg-yellow-400/10',
+      border: 'border-yellow-400/20'
+    }
+  };
+
+  const item = config[type];
+
+  return (
+    <motion.div 
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${item.bg} ${item.border} ${item.color}`}
+    >
+      {item.icon}
+      <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
+    </motion.div>
   );
 }
