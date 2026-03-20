@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 
+export interface SoundSettings {
+  type: 'beep' | 'chime' | 'bell' | 'custom';
+  customUrl?: string;
+}
+
 export interface UserProgress {
   sessions: number;
   points: number;
@@ -8,6 +13,8 @@ export interface UserProgress {
   badges: string[];
   shares: number;
   installs: number;
+  soundSettings: SoundSettings;
+  language: string;
 }
 
 export function useProgress() {
@@ -18,14 +25,34 @@ export function useProgress() {
       if (!parsed.badges) parsed.badges = [];
       if (parsed.shares === undefined) parsed.shares = 0;
       if (parsed.installs === undefined) parsed.installs = 0;
+      if (!parsed.soundSettings) parsed.soundSettings = { type: 'beep' };
+      if (!parsed.language) parsed.language = 'en';
       return parsed;
     }
-    return { sessions: 0, points: 0, streak: 0, lastDone: null, badges: [], shares: 0, installs: 0 };
+    return { 
+      sessions: 0, 
+      points: 0, 
+      streak: 0, 
+      lastDone: null, 
+      badges: [], 
+      shares: 0, 
+      installs: 0,
+      soundSettings: { type: 'beep' },
+      language: 'en'
+    };
   });
 
   useEffect(() => {
     localStorage.setItem('eyeProgress_v2', JSON.stringify(progress));
   }, [progress]);
+
+  const updateSoundSettings = (settings: SoundSettings) => {
+    setProgress(prev => ({ ...prev, soundSettings: settings }));
+  };
+
+  const setLanguage = (lang: string) => {
+    setProgress(prev => ({ ...prev, language: lang }));
+  };
 
   const incrementShares = () => {
     setProgress(prev => ({ ...prev, shares: prev.shares + 1 }));
@@ -65,5 +92,5 @@ export function useProgress() {
     });
   };
 
-  return { progress, awardPoints, incrementShares, incrementInstalls };
+  return { progress, awardPoints, incrementShares, incrementInstalls, updateSoundSettings, setLanguage };
 }

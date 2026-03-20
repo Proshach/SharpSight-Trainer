@@ -23,18 +23,34 @@ import {
   ShieldCheck,
   Star,
   Share2,
-  Download
+  Download,
+  Settings,
+  Volume2,
+  Music,
+  Upload,
+  Globe
 } from 'lucide-react';
 import { useProgress } from './hooks/useProgress';
+import { translations } from './i18n';
 
 type TabType = '2020' | 'nearfar' | 'fig8';
 
 export default function App() {
-  const { progress, awardPoints, incrementShares, incrementInstalls } = useProgress();
+  const { progress, awardPoints, incrementShares, incrementInstalls, updateSoundSettings, setLanguage } = useProgress();
   const [activeTab, setActiveTab] = useState<TabType>('2020');
   const [isDark, setIsDark] = useState(true);
   const [notif, setNotif] = useState<{ msg: string; icon: React.ReactNode } | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showLanguage, setShowLanguage] = useState(false);
+
+  const t = translations[progress.language] || translations.en;
+  const isRTL = progress.language === 'ar';
+
+  useEffect(() => {
+    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+    document.documentElement.lang = progress.language;
+  }, [progress.language, isRTL]);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -44,7 +60,7 @@ export default function App() {
     window.addEventListener('beforeinstallprompt', handler);
     window.addEventListener('appinstalled', () => {
       incrementInstalls();
-      showNotif("App installed successfully!", <Download size={18} />);
+      showNotif(t.notifInstalled, <Download size={18} />);
     });
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, [incrementInstalls]);
@@ -60,8 +76,8 @@ export default function App() {
 
   const handleShare = async () => {
     const shareData = {
-      title: 'EyeTrain 2.0',
-      text: 'Train your eyes and reduce digital fatigue with EyeTrain 2.0!',
+      title: t.title,
+      text: t.heroDesc,
       url: window.location.href
     };
 
@@ -69,11 +85,11 @@ export default function App() {
       if (navigator.share) {
         await navigator.share(shareData);
         incrementShares();
-        showNotif("Shared successfully!", <Share2 size={18} />);
+        showNotif(t.notifShared, <Share2 size={18} />);
       } else {
         await navigator.clipboard.writeText(window.location.href);
         incrementShares();
-        showNotif("Link copied to clipboard!", <Share2 size={18} />);
+        showNotif(t.notifCopied, <Share2 size={18} />);
       }
     } catch (err) {
       console.error('Error sharing:', err);
@@ -85,7 +101,58 @@ export default function App() {
     setTimeout(() => setNotif(null), 3000);
   };
 
-  const playBeep = useCallback((freq = 520, dur = 0.18) => {
+  const playAlert = useCallback((freq = 520, dur = 0.18) => {
+    try {
+      const { type, customUrl } = progress.soundSettings;
+
+      if (type === 'custom' && customUrl) {
+        const audio = new Audio(customUrl);
+        audio.play().catch(() => {
+          // Fallback to beep if custom fails
+          playBeep(freq, dur);
+        });
+        return;
+      }
+
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const g = ctx.createGain();
+      const o = ctx.createOscillator();
+      
+      if (type === 'chime') {
+        o.type = 'sine';
+        o.frequency.setValueAtTime(880, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.5);
+        g.gain.setValueAtTime(0.3, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + 0.5);
+      } else if (type === 'bell') {
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(1200, ctx.currentTime);
+        g.gain.setValueAtTime(0.2, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.0);
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + 1.0);
+      } else {
+        // Default beep
+        o.type = 'sine';
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.3, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + dur);
+      }
+    } catch (e) {}
+    if ('vibrate' in navigator) navigator.vibrate(150);
+  }, [progress.soundSettings]);
+
+  const playBeep = (freq: number, dur: number) => {
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const g = ctx.createGain();
@@ -99,8 +166,7 @@ export default function App() {
       o.start();
       o.stop(ctx.currentTime + dur);
     } catch (e) {}
-    if ('vibrate' in navigator) navigator.vibrate(150);
-  }, []);
+  };
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-bg-deep text-text-hi' : 'bg-[#f0f2fb] text-[#0d0f1a] light'}`}>
@@ -136,36 +202,201 @@ export default function App() {
               Eye<span className="text-accent">Train</span> 2.0
             </h1>
           </div>
-          <button 
-            onClick={() => setIsDark(!isDark)}
-            className="w-10 h-10 bg-bg-card border border-white/5 rounded-xl flex items-center justify-center hover:bg-bg-mid transition-all active:scale-90"
-          >
-            {isDark ? <Sun size={18} className="text-yellow-400" /> : <Moon size={18} className="text-accent" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setShowLanguage(true)}
+              className="w-10 h-10 bg-bg-card border border-white/5 rounded-xl flex items-center justify-center hover:bg-bg-mid transition-all active:scale-90"
+            >
+              <Globe size={18} className="text-text-lo" />
+            </button>
+            <button 
+              onClick={() => setShowSettings(true)}
+              className="w-10 h-10 bg-bg-card border border-white/5 rounded-xl flex items-center justify-center hover:bg-bg-mid transition-all active:scale-90"
+            >
+              <Settings size={18} className="text-text-lo" />
+            </button>
+            <button 
+              onClick={() => setIsDark(!isDark)}
+              className="w-10 h-10 bg-bg-card border border-white/5 rounded-xl flex items-center justify-center hover:bg-bg-mid transition-all active:scale-90"
+            >
+              {isDark ? <Sun size={18} className="text-yellow-400" /> : <Moon size={18} className="text-accent" />}
+            </button>
+          </div>
         </header>
+
+        {/* Settings Modal */}
+        <AnimatePresence>
+          {showSettings && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowSettings(false)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="relative w-full max-w-md bg-bg-card border border-white/10 rounded-3xl p-8 shadow-2xl space-y-6"
+              >
+                <header className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-accent/20 rounded-lg flex items-center justify-center text-accent">
+                      <Volume2 size={18} />
+                    </div>
+                    <h3 className="text-lg font-bold">{t.soundSettings}</h3>
+                  </div>
+                  <button onClick={() => setShowSettings(false)} className="text-text-lo hover:text-text-hi">
+                    <Square size={18} />
+                  </button>
+                </header>
+
+                <div className="space-y-4">
+                  <p className="text-xs text-text-lo uppercase tracking-widest font-bold">{t.alertSound}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['beep', 'chime', 'bell'] as const).map(sound => (
+                      <button 
+                        key={sound}
+                        onClick={() => {
+                          updateSoundSettings({ type: sound });
+                          setTimeout(() => playAlert(), 100);
+                        }}
+                        className={`px-4 py-3 rounded-xl border text-sm font-medium capitalize transition-all ${
+                          progress.soundSettings.type === sound 
+                            ? 'bg-accent/10 border-accent text-accent' 
+                            : 'bg-bg-mid border-white/5 text-text-lo hover:border-white/20'
+                        }`}
+                      >
+                        {t[sound]}
+                      </button>
+                    ))}
+                    <button 
+                      onClick={() => {
+                        const url = prompt('Enter custom sound URL (mp3/wav):', progress.soundSettings.customUrl || '');
+                        if (url !== null) {
+                          updateSoundSettings({ type: 'custom', customUrl: url });
+                        }
+                      }}
+                      className={`px-4 py-3 rounded-xl border text-sm font-medium capitalize transition-all flex items-center justify-center gap-2 ${
+                        progress.soundSettings.type === 'custom' 
+                          ? 'bg-accent/10 border-accent text-accent' 
+                          : 'bg-bg-mid border-white/5 text-text-lo hover:border-white/20'
+                      }`}
+                    >
+                      <Music size={14} /> {t.custom}
+                    </button>
+                  </div>
+
+                  {progress.soundSettings.type === 'custom' && progress.soundSettings.customUrl && (
+                    <div className="text-[10px] text-text-lo break-all bg-bg-mid p-2 rounded-lg border border-white/5">
+                      URL: {progress.soundSettings.customUrl}
+                    </div>
+                  )}
+
+                  <div className="pt-4 border-t border-white/5">
+                    <button 
+                      onClick={() => playAlert()}
+                      className="w-full bg-accent text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
+                    >
+                      <Volume2 size={16} /> {t.testSound}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Language Modal */}
+        <AnimatePresence>
+          {showLanguage && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowLanguage(false)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="relative w-full max-w-md bg-bg-card border border-white/10 rounded-3xl p-8 shadow-2xl space-y-6"
+              >
+                <header className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-accent/20 rounded-lg flex items-center justify-center text-accent">
+                      <Globe size={18} />
+                    </div>
+                    <h3 className="text-lg font-bold">{t.language}</h3>
+                  </div>
+                  <button onClick={() => setShowLanguage(false)} className="text-text-lo hover:text-text-hi">
+                    <Square size={18} />
+                  </button>
+                </header>
+
+                <div className="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                  {[
+                    { id: 'en', label: 'English' },
+                    { id: 'es', label: 'Español' },
+                    { id: 'fr', label: 'Français' },
+                    { id: 'de', label: 'Deutsch' },
+                    { id: 'ja', label: '日本語' },
+                    { id: 'pt', label: 'Português' },
+                    { id: 'it', label: 'Italiano' },
+                    { id: 'zh', label: '简体中文' },
+                    { id: 'ko', label: '한국어' },
+                    { id: 'ar', label: 'العربية' },
+                    { id: 'ru', label: 'Русский' }
+                  ].map(lang => (
+                    <button 
+                      key={lang.id}
+                      onClick={() => {
+                        setLanguage(lang.id);
+                        setShowLanguage(false);
+                      }}
+                      className={`px-4 py-3 rounded-xl border text-sm font-medium transition-all flex items-center justify-between ${
+                        progress.language === lang.id 
+                          ? 'bg-accent/10 border-accent text-accent' 
+                          : 'bg-bg-mid border-white/5 text-text-lo hover:border-white/20'
+                      }`}
+                      dir={lang.id === 'ar' ? 'rtl' : 'ltr'}
+                    >
+                      {lang.label}
+                      {progress.language === lang.id && <CheckCircle2 size={16} />}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Hero */}
         <section className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 text-accent text-[10px] font-mono uppercase tracking-widest px-3 py-1 rounded-full">
             <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
-            Digital Eye Wellness
+            {t.subtitle}
           </div>
           <h2 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tighter">
-            Train your eyes.<br/>
-            <span className="bg-gradient-to-r from-accent to-accent-2 bg-clip-text text-transparent">Reduce fatigue.</span>
+            {t.heroTitle}<br/>
+            <span className="bg-gradient-to-r from-accent to-accent-2 bg-clip-text text-transparent">{t.heroAccent}</span>
           </h2>
           <p className="text-text-lo max-w-md mx-auto text-sm md:text-base leading-relaxed">
-            Science-backed exercises to relieve screen strain and strengthen your focus muscles.
+            {t.heroDesc}
           </p>
         </section>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <StatCard value={progress.sessions} label="Sessions" icon={<Zap size={14} className="text-accent" />} />
-          <StatCard value={`${progress.streak}🔥`} label="Streak" icon={<Flame size={14} className="text-orange-500" />} />
-          <StatCard value={progress.points} label="Points" icon={<Trophy size={14} className="text-accent-3" />} />
-          <StatCard value={progress.installs} label="Downloads" icon={<Download size={14} className="text-blue-400" />} />
-          <StatCard value={progress.shares} label="Shared" icon={<Share2 size={14} className="text-purple-400" />} />
+          <StatCard value={progress.sessions} label={t.sessions} icon={<Zap size={14} className="text-accent" />} />
+          <StatCard value={`${progress.streak}🔥`} label={t.streak} icon={<Flame size={14} className="text-orange-500" />} />
+          <StatCard value={progress.points} label={t.points} icon={<Trophy size={14} className="text-accent-3" />} />
+          <StatCard value={progress.installs} label={t.downloads} icon={<Download size={14} className="text-blue-400" />} />
+          <StatCard value={progress.shares} label={t.shared} icon={<Share2 size={14} className="text-purple-400" />} />
         </div>
 
         {/* Action Buttons */}
@@ -174,14 +405,14 @@ export default function App() {
             onClick={handleShare}
             className="flex items-center gap-2 bg-bg-card border border-white/5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-bg-mid transition-all"
           >
-            <Share2 size={14} className="text-purple-400" /> Share App
+            <Share2 size={14} className="text-purple-400" /> {t.shareApp}
           </button>
           {deferredPrompt && (
             <button 
               onClick={handleInstall}
               className="flex items-center gap-2 bg-bg-card border border-white/5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-bg-mid transition-all"
             >
-              <Download size={14} className="text-blue-400" /> Install App
+              <Download size={14} className="text-blue-400" /> {t.installApp}
             </button>
           )}
         </div>
@@ -196,11 +427,11 @@ export default function App() {
             >
               <div className="flex items-center gap-2 mb-3">
                 <Medal size={16} className="text-accent" />
-                <h3 className="text-xs font-bold uppercase tracking-widest text-text-lo">Earned Badges</h3>
+                <h3 className="text-xs font-bold uppercase tracking-widest text-text-lo">{t.earnedBadges}</h3>
               </div>
               <div className="flex flex-wrap gap-3">
                 {progress.badges.map(badge => (
-                  <BadgeItem key={badge} type={badge as any} />
+                  <BadgeItem key={badge} type={badge as any} t={t} />
                 ))}
               </div>
             </motion.section>
@@ -213,19 +444,19 @@ export default function App() {
             active={activeTab === '2020'} 
             onClick={() => setActiveTab('2020')} 
             icon={<Timer size={18} />} 
-            label="20-20-20" 
+            label={t.tab2020} 
           />
           <TabButton 
             active={activeTab === 'nearfar'} 
             onClick={() => setActiveTab('nearfar')} 
             icon={<Telescope size={18} />} 
-            label="Near-Far" 
+            label={t.tabNearFar} 
           />
           <TabButton 
             active={activeTab === 'fig8'} 
             onClick={() => setActiveTab('fig8')} 
             icon={<InfinityIcon size={18} />} 
-            label="Figure-8" 
+            label={t.tabFig8} 
           />
         </nav>
 
@@ -235,60 +466,48 @@ export default function App() {
             {activeTab === '2020' && (
               <ExercisePanel 
                 key="2020"
-                label="Exercise 01 · Timer"
-                title="20 · 20 · 20 Rule"
-                desc="For every 20 minutes of screen time, look at something 20 feet away for 20 seconds."
-                steps={[
-                  "Start the 20-minute work timer.",
-                  "When it beeps, look out a window or across the room.",
-                  "Hold for 20 seconds, then return to screen."
-                ]}
+                label={t.ex01Label}
+                title={t.ex01Title}
+                desc={t.ex01Desc}
+                steps={t.ex01Steps}
               >
                 <Timer2020 onComplete={() => {
                   awardPoints(10);
-                  showNotif("Session complete! +10 pts", <CheckCircle2 size={18} />);
-                  playBeep();
-                }} playBeep={playBeep} />
+                  showNotif(t.notifComplete.replace('{pts}', '10'), <CheckCircle2 size={18} />);
+                  playAlert();
+                }} playAlert={playAlert} t={t} />
               </ExercisePanel>
             )}
 
             {activeTab === 'nearfar' && (
               <ExercisePanel 
                 key="nearfar"
-                label="Exercise 02 · Focus"
-                title="Near-Far Focus"
-                desc="Alternate focus between something close and far away to improve flexibility."
-                steps={[
-                  "Hold a finger 10 cm from your nose.",
-                  "Focus on your finger for 3 seconds.",
-                  "Shift focus to a point across the room for 3 seconds."
-                ]}
+                label={t.ex02Label}
+                title={t.ex02Title}
+                desc={t.ex02Desc}
+                steps={t.ex02Steps}
               >
                 <NearFarExercise onComplete={() => {
                   awardPoints(15);
-                  showNotif("Near-Far complete! +15 pts", <CheckCircle2 size={18} />);
-                  playBeep();
-                }} />
+                  showNotif(t.notifNearFar, <CheckCircle2 size={18} />);
+                  playAlert();
+                }} t={t} />
               </ExercisePanel>
             )}
 
             {activeTab === 'fig8' && (
               <ExercisePanel 
                 key="fig8"
-                label="Exercise 03 · Tracking"
-                title="Figure-8 Tracking"
-                desc="Follow the moving dot using only your eye muscles — keep your head still."
-                steps={[
-                  "Sit comfortably 50 cm from your screen.",
-                  "Keep your head completely still.",
-                  "Follow the dot with your eyes only."
-                ]}
+                label={t.ex03Label}
+                title={t.ex03Title}
+                desc={t.ex03Desc}
+                steps={t.ex03Steps}
               >
                 <Figure8Exercise onComplete={() => {
                   awardPoints(20);
-                  showNotif("Figure-8 complete! +20 pts", <CheckCircle2 size={18} />);
-                  playBeep();
-                }} />
+                  showNotif(t.notifFig8, <CheckCircle2 size={18} />);
+                  playAlert();
+                }} t={t} />
               </ExercisePanel>
             )}
           </AnimatePresence>
@@ -296,9 +515,9 @@ export default function App() {
 
         {/* Tips */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <TipCard icon={<Lightbulb />} title="Blink More" text="Blink fully every 4-5 seconds to rewet your corneas." />
-          <TipCard icon={<Thermometer />} title="Screen Distance" text="Keep screens at least arm's length (50-70 cm) away." />
-          <TipCard icon={<MoonStar />} title="Night Mode" text="Use blue-light filters after sunset to protect melatonin." />
+          <TipCard icon={<Lightbulb />} title={t.tip1Title} text={t.tip1Desc} />
+          <TipCard icon={<Thermometer />} title={t.tip2Title} text={t.tip2Desc} />
+          <TipCard icon={<MoonStar />} title={t.tip3Title} text={t.tip3Desc} />
         </section>
       </main>
     </div>
@@ -366,7 +585,7 @@ function ExercisePanel({ label, title, desc, steps, children }: { label: string;
   );
 }
 
-function Timer2020({ onComplete, playBeep }: { onComplete: () => void; playBeep: (f?: number, d?: number) => void }) {
+function Timer2020({ onComplete, playAlert, t }: { onComplete: () => void; playAlert: (f?: number, d?: number) => void; t: any }) {
   const [timeLeft, setTimeLeft] = useState(1200);
   const [isActive, setIsActive] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
@@ -389,13 +608,13 @@ function Timer2020({ onComplete, playBeep }: { onComplete: () => void; playBeep:
         setIsBreak(false);
         setTimeLeft(WORK_TIME);
         setIsActive(false);
-        playBeep(660);
+        playAlert(660);
       }
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isActive, timeLeft, isBreak, onComplete, playBeep]);
+  }, [isActive, timeLeft, isBreak, onComplete, playAlert]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -422,7 +641,7 @@ function Timer2020({ onComplete, playBeep }: { onComplete: () => void; playBeep:
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <div className="text-4xl font-mono font-bold">{formatTime(timeLeft)}</div>
           <div className="text-[10px] uppercase tracking-widest text-text-lo mt-1">
-            {isBreak ? 'Break' : 'Focus'}
+            {isBreak ? t.break : t.focus}
           </div>
         </div>
       </div>
@@ -430,11 +649,11 @@ function Timer2020({ onComplete, playBeep }: { onComplete: () => void; playBeep:
       <div className="flex gap-3">
         {!isActive ? (
           <button onClick={() => setIsActive(true)} className="bg-accent text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-accent/20">
-            <Play size={16} /> Start Session
+            <Play size={16} /> {t.startSession}
           </button>
         ) : (
           <button onClick={() => setIsActive(false)} className="bg-bg-mid text-text-hi border border-white/5 px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
-            <Square size={16} /> Stop
+            <Square size={16} /> {t.stop}
           </button>
         )}
       </div>
@@ -442,7 +661,7 @@ function Timer2020({ onComplete, playBeep }: { onComplete: () => void; playBeep:
   );
 }
 
-function NearFarExercise({ onComplete }: { onComplete: () => void }) {
+function NearFarExercise({ onComplete, t }: { onComplete: () => void; t: any }) {
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const [phase, setPhase] = useState<'near' | 'far'>('near');
@@ -476,14 +695,14 @@ function NearFarExercise({ onComplete }: { onComplete: () => void }) {
           animate={{ scale: phase === 'near' ? 1.2 : 1, opacity: phase === 'near' ? 1 : 0.4 }}
           className={`w-20 h-20 rounded-full border-2 border-accent flex items-center justify-center font-mono text-[10px] uppercase tracking-widest ${phase === 'near' ? 'bg-accent/20' : 'bg-transparent'}`}
         >
-          Near
+          {t.near || 'Near'}
         </motion.div>
         <div className="w-8 h-[1px] bg-white/10" />
         <motion.div 
           animate={{ scale: phase === 'far' ? 1.2 : 1, opacity: phase === 'far' ? 1 : 0.4 }}
           className={`w-24 h-24 rounded-full border-2 border-accent-2 flex items-center justify-center font-mono text-[10px] uppercase tracking-widest ${phase === 'far' ? 'bg-accent-2/20' : 'bg-transparent'}`}
         >
-          Far
+          {t.far || 'Far'}
         </motion.div>
       </div>
 
@@ -500,18 +719,18 @@ function NearFarExercise({ onComplete }: { onComplete: () => void }) {
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <div className="text-3xl font-mono font-bold">{timeLeft}</div>
-          <div className="text-[10px] uppercase tracking-widest text-text-lo mt-1">Seconds</div>
+          <div className="text-[10px] uppercase tracking-widest text-text-lo mt-1">{t.seconds}</div>
         </div>
       </div>
 
       <div className="flex gap-3">
         {!isActive ? (
           <button onClick={() => { setIsActive(true); setTimeLeft(60); }} className="bg-accent-2 text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-accent-2/20">
-            <Play size={16} /> Start Focus
+            <Play size={16} /> {t.startFocus}
           </button>
         ) : (
           <button onClick={() => setIsActive(false)} className="bg-bg-mid text-text-hi border border-white/5 px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
-            <Square size={16} /> Stop
+            <Square size={16} /> {t.stop}
           </button>
         )}
       </div>
@@ -519,7 +738,7 @@ function NearFarExercise({ onComplete }: { onComplete: () => void }) {
   );
 }
 
-function Figure8Exercise({ onComplete }: { onComplete: () => void }) {
+function Figure8Exercise({ onComplete, t }: { onComplete: () => void; t: any }) {
   const [isPlaying, setIsPlaying] = useState(false);
 
   return (
@@ -540,15 +759,15 @@ function Figure8Exercise({ onComplete }: { onComplete: () => void }) {
       <div className="flex gap-3">
         {!isPlaying ? (
           <button onClick={() => setIsPlaying(true)} className="bg-accent text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
-            <Play size={16} /> Play Dot
+            <Play size={16} /> {t.playDot}
           </button>
         ) : (
           <button onClick={() => setIsPlaying(false)} className="bg-bg-mid text-text-hi border border-white/5 px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
-            <Pause size={16} /> Pause
+            <Pause size={16} /> {t.pause}
           </button>
         )}
         <button onClick={onComplete} className="bg-accent-3/10 text-accent-3 border border-accent-3/20 px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
-          <CheckCircle2 size={16} /> Done
+          <CheckCircle2 size={16} /> {t.done}
         </button>
       </div>
     </div>
@@ -567,25 +786,25 @@ function TipCard({ icon, title, text }: { icon: React.ReactNode; title: string; 
   );
 }
 
-function BadgeItem({ type }: { type: '7-day' | '30-day' | '90-day'; key?: string }) {
+function BadgeItem({ type, t }: { type: '7-day' | '30-day' | '90-day'; t: any; key?: string }) {
   const config = {
     '7-day': {
       icon: <Star size={18} />,
-      label: '7 Day Streak',
+      label: t.badge7,
       color: 'text-blue-400',
       bg: 'bg-blue-400/10',
       border: 'border-blue-400/20'
     },
     '30-day': {
       icon: <ShieldCheck size={18} />,
-      label: '30 Day Streak',
+      label: t.badge30,
       color: 'text-purple-400',
       bg: 'bg-purple-400/10',
       border: 'border-purple-400/20'
     },
     '90-day': {
       icon: <Award size={18} />,
-      label: '90 Day Streak',
+      label: t.badge90,
       color: 'text-yellow-400',
       bg: 'bg-yellow-400/10',
       border: 'border-yellow-400/20'
