@@ -62,3 +62,61 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* 3D Objects */
+.cube-container {
+  perspective: 800px;
+  width: 96px;
+  height: 96px;
+}
+
+.cube {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #5c9aff;
+  background: rgba(92, 154, 255, 0.1);
+}
+
+.front  { transform: translateZ(48px); }
+.back   { transform: rotateY(180deg) translateZ(48px); }
+.right  { transform: rotateY(90deg) translateZ(48px); }
+.left   { transform: rotateY(-90deg) translateZ(48px); }
+.top    { transform: rotateX(90deg) translateZ(48px); }
+.bottom { transform: rotateX(-90deg) translateZ(48px); }
+
+.pyramid-container {
+  perspective: 800px;
+  width: 96px;
+  height: 96px;
+}
+
+.pyramid {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.side {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 48px solid transparent;
+  border-right: 48px solid transparent;
+  border-bottom: 83px solid rgba(167, 139, 250, 0.3);
+  border-bottom-color: #a78bfa;
+  transform-origin: 50% 100%;
+}
+
+.s1 { transform: rotateY(0deg) rotateX(30deg); }
+.s2 { transform: rotateY(90deg) rotateX(30deg); }
+.s3 { transform: rotateY(180deg) rotateX(30deg); }
+.s4 { transform: rotateY(270deg) rotateX(30deg); }

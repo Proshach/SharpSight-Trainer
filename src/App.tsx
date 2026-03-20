@@ -665,7 +665,20 @@ function NearFarExercise({ onComplete, t }: { onComplete: () => void; t: any }) 
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const [phase, setPhase] = useState<'near' | 'far'>('near');
+  const [objectIndex, setObjectIndex] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const objects = [
+    { type: 'letter', value: 'A' },
+    { type: 'shape2d', value: 'circle' },
+    { type: 'letter', value: 'B' },
+    { type: 'shape3d', value: 'cube' },
+    { type: 'letter', value: 'C' },
+    { type: 'shape2d', value: 'square' },
+    { type: 'shape3d', value: 'pyramid' },
+    { type: 'letter', value: 'D' },
+    { type: 'shape2d', value: 'triangle' },
+  ];
 
   useEffect(() => {
     if (isActive && timeLeft > 0) {
@@ -673,7 +686,12 @@ function NearFarExercise({ onComplete, t }: { onComplete: () => void; t: any }) 
         setTimeLeft(prev => {
           const next = prev - 1;
           const currentPhase = Math.floor((60 - next) / 3) % 2 === 0 ? 'near' : 'far';
-          setPhase(currentPhase);
+          
+          if (currentPhase !== phase) {
+            setPhase(currentPhase);
+            setObjectIndex(prevIdx => (prevIdx + 1) % objects.length);
+          }
+          
           return next;
         });
       }, 1000);
@@ -684,55 +702,118 @@ function NearFarExercise({ onComplete, t }: { onComplete: () => void; t: any }) 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isActive, timeLeft, onComplete]);
+  }, [isActive, timeLeft, phase, objects.length, onComplete]);
 
-  const circ = 2 * Math.PI * 54;
+  const currentObj = objects[objectIndex];
+
+  const renderObject = () => {
+    switch (currentObj.type) {
+      case 'letter':
+        return (
+          <span className="text-6xl font-bold font-mono text-accent drop-shadow-[0_0_15px_rgba(var(--accent-rgb),0.5)]">
+            {currentObj.value}
+          </span>
+        );
+      case 'shape2d':
+        if (currentObj.value === 'circle') return <div className="w-24 h-24 rounded-full border-4 border-accent-2 shadow-[0_0_20px_rgba(var(--accent-2-rgb),0.3)]" />;
+        if (currentObj.value === 'square') return <div className="w-24 h-24 border-4 border-accent-3 shadow-[0_0_20px_rgba(var(--accent-3-rgb),0.3)]" />;
+        if (currentObj.value === 'triangle') return (
+          <div className="w-0 h-0 border-l-[50px] border-l-transparent border-r-[50px] border-r-transparent border-bottom-[86px] border-bottom-accent" />
+        );
+        return null;
+      case 'shape3d':
+        if (currentObj.value === 'cube') {
+          return (
+            <div className="cube-container w-24 h-24">
+              <div className="cube">
+                <div className="face front" />
+                <div className="face back" />
+                <div className="face right" />
+                <div className="face left" />
+                <div className="face top" />
+                <div className="face bottom" />
+              </div>
+            </div>
+          );
+        }
+        if (currentObj.value === 'pyramid') {
+          return (
+            <div className="pyramid-container w-24 h-24">
+              <div className="pyramid">
+                <div className="side s1" />
+                <div className="side s2" />
+                <div className="side s3" />
+                <div className="side s4" />
+              </div>
+            </div>
+          );
+        }
+        return null;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="flex flex-col items-center gap-8">
-      <div className="flex items-center justify-center gap-4 py-4">
-        <motion.div 
-          animate={{ scale: phase === 'near' ? 1.2 : 1, opacity: phase === 'near' ? 1 : 0.4 }}
-          className={`w-20 h-20 rounded-full border-2 border-accent flex items-center justify-center font-mono text-[10px] uppercase tracking-widest ${phase === 'near' ? 'bg-accent/20' : 'bg-transparent'}`}
-        >
-          {t.near || 'Near'}
-        </motion.div>
-        <div className="w-8 h-[1px] bg-white/10" />
-        <motion.div 
-          animate={{ scale: phase === 'far' ? 1.2 : 1, opacity: phase === 'far' ? 1 : 0.4 }}
-          className={`w-24 h-24 rounded-full border-2 border-accent-2 flex items-center justify-center font-mono text-[10px] uppercase tracking-widest ${phase === 'far' ? 'bg-accent-2/20' : 'bg-transparent'}`}
-        >
-          {t.far || 'Far'}
-        </motion.div>
-      </div>
+    <div className="flex flex-col items-center gap-10 w-full">
+      {/* Single spacious card for exercise */}
+      <div className="relative w-full max-w-2xl aspect-video bg-bg-mid/30 rounded-[2rem] border border-white/5 overflow-hidden flex items-center justify-center p-12 shadow-inner">
+        {/* Background Grid for depth */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none" 
+             style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${objectIndex}-${phase}`}
+            initial={{ scale: phase === 'near' ? 0.2 : 2, opacity: 0 }}
+            animate={{ 
+              scale: phase === 'near' ? 1.5 : 0.5, 
+              opacity: 1,
+              rotateY: currentObj.type === 'shape3d' ? [0, 360] : 0
+            }}
+            exit={{ scale: phase === 'near' ? 2 : 0.2, opacity: 0 }}
+            transition={{ 
+              duration: 1.5, 
+              ease: "easeInOut",
+              rotateY: { duration: 3, repeat: Infinity, ease: "linear" }
+            }}
+            className="relative z-10 flex items-center justify-center"
+          >
+            {renderObject()}
+          </motion.div>
+        </AnimatePresence>
 
-      <div className="relative w-40 h-40">
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 114 114">
-          <circle className="fill-none stroke-bg-mid stroke-[6]" cx="57" cy="57" r="54" />
-          <circle 
-            className="fill-none stroke-accent-2 stroke-[6] ring-fill" 
-            cx="57" cy="57" r="54" 
-            strokeDasharray={circ}
-            strokeDashoffset={circ * (1 - timeLeft / 60)}
-            strokeLinecap="round"
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="text-3xl font-mono font-bold">{timeLeft}</div>
-          <div className="text-[10px] uppercase tracking-widest text-text-lo mt-1">{t.seconds}</div>
+        {/* Phase Indicator Overlay */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-bg-card/80 backdrop-blur px-4 py-2 rounded-full border border-white/10">
+          <div className={`w-2 h-2 rounded-full ${phase === 'near' ? 'bg-accent animate-pulse' : 'bg-accent-2'}`} />
+          <span className="text-[10px] uppercase tracking-[0.2em] font-bold">
+            {phase === 'near' ? t.near : t.far}
+          </span>
         </div>
       </div>
 
-      <div className="flex gap-3">
-        {!isActive ? (
-          <button onClick={() => { setIsActive(true); setTimeLeft(60); }} className="bg-accent-2 text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-accent-2/20">
-            <Play size={16} /> {t.startFocus}
-          </button>
-        ) : (
-          <button onClick={() => setIsActive(false)} className="bg-bg-mid text-text-hi border border-white/5 px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
-            <Square size={16} /> {t.stop}
-          </button>
-        )}
+      {/* Progress & Controls */}
+      <div className="flex flex-col items-center gap-6 w-full">
+        <div className="relative w-full max-w-xs h-2 bg-bg-mid rounded-full overflow-hidden border border-white/5">
+          <motion.div 
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-accent to-accent-2"
+            animate={{ width: `${(timeLeft / 60) * 100}%` }}
+          />
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="text-2xl font-mono font-bold text-text-hi">{timeLeft}s</div>
+          <div className="h-4 w-[1px] bg-white/10" />
+          {!isActive ? (
+            <button onClick={() => { setIsActive(true); setTimeLeft(60); }} className="bg-accent text-white px-10 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-accent/20">
+              <Play size={16} /> {t.startFocus}
+            </button>
+          ) : (
+            <button onClick={() => setIsActive(false)} className="bg-bg-mid text-text-hi border border-white/5 px-10 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
+              <Square size={16} /> {t.stop}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
