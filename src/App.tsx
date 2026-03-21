@@ -28,16 +28,31 @@ import {
   Volume2,
   Music,
   Upload,
-  Globe
+  Globe,
+  Home,
+  ArrowLeft,
+  ChevronRight,
+  Wind
 } from 'lucide-react';
 import { useProgress } from './hooks/useProgress';
 import { translations } from './i18n';
 
-type TabType = '2020' | 'nearfar' | 'fig8';
+type TabType = '2020' | 'nearfar' | 'fig8' | 'colorblind' | 'astigmatism' | 'illusion' | 'zigzag';
+
+interface Exercise {
+  id: TabType;
+  icon: React.ReactNode;
+  label: string;
+  title: string;
+  desc: string;
+  steps: string[];
+  color: string;
+  points: number;
+}
 
 export default function App() {
   const { progress, awardPoints, incrementShares, incrementInstalls, updateSoundSettings, setLanguage } = useProgress();
-  const [activeTab, setActiveTab] = useState<TabType>('2020');
+  const [activeTab, setActiveTab] = useState<TabType | null>(null);
   const [isDark, setIsDark] = useState(true);
   const [notif, setNotif] = useState<{ msg: string; icon: React.ReactNode } | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -167,6 +182,79 @@ export default function App() {
       o.stop(ctx.currentTime + dur);
     } catch (e) {}
   };
+
+  const exercises: Exercise[] = [
+    {
+      id: '2020',
+      icon: <Timer size={24} />,
+      label: t.ex01Label,
+      title: t.ex01Title,
+      desc: t.ex01Desc,
+      steps: t.ex01Steps,
+      color: 'from-accent to-accent-2',
+      points: 10
+    },
+    {
+      id: 'nearfar',
+      icon: <Telescope size={24} />,
+      label: t.ex02Label,
+      title: t.ex02Title,
+      desc: t.ex02Desc,
+      steps: t.ex02Steps,
+      color: 'from-accent-2 to-purple-500',
+      points: 15
+    },
+    {
+      id: 'fig8',
+      icon: <InfinityIcon size={24} />,
+      label: t.ex03Label,
+      title: t.ex03Title,
+      desc: t.ex03Desc,
+      steps: t.ex03Steps,
+      color: 'from-accent-3 to-emerald-600',
+      points: 20
+    },
+    {
+      id: 'colorblind',
+      icon: <Eye size={24} />,
+      label: t.ex04Label,
+      title: t.ex04Title,
+      desc: t.ex04Desc,
+      steps: t.ex04Steps,
+      color: 'from-orange-400 to-red-500',
+      points: 25
+    },
+    {
+      id: 'astigmatism',
+      icon: <Zap size={24} />,
+      label: t.ex05Label,
+      title: t.ex05Title,
+      desc: t.ex05Desc,
+      steps: t.ex05Steps,
+      color: 'from-blue-400 to-indigo-600',
+      points: 25
+    },
+    {
+      id: 'illusion',
+      icon: <Wind size={24} />,
+      label: t.ex06Label,
+      title: t.ex06Title,
+      desc: t.ex06Desc,
+      steps: t.ex06Steps,
+      color: 'from-pink-500 to-rose-600',
+      points: 20
+    },
+    {
+      id: 'zigzag',
+      icon: <Zap size={24} />,
+      label: t.ex07Label,
+      title: t.ex07Title,
+      desc: t.ex07Desc,
+      steps: t.ex07Steps,
+      color: 'from-yellow-400 to-orange-500',
+      points: 20
+    }
+  ];
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-bg-deep text-text-hi' : 'bg-[#f0f2fb] text-[#0d0f1a] light'}`}>
@@ -438,80 +526,59 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {/* Tabs */}
-        <nav className="bg-bg-card border border-white/5 p-1.5 rounded-2xl flex gap-1">
-          <TabButton 
-            active={activeTab === '2020'} 
-            onClick={() => setActiveTab('2020')} 
-            icon={<Timer size={18} />} 
-            label={t.tab2020} 
-          />
-          <TabButton 
-            active={activeTab === 'nearfar'} 
-            onClick={() => setActiveTab('nearfar')} 
-            icon={<Telescope size={18} />} 
-            label={t.tabNearFar} 
-          />
-          <TabButton 
-            active={activeTab === 'fig8'} 
-            onClick={() => setActiveTab('fig8')} 
-            icon={<InfinityIcon size={18} />} 
-            label={t.tabFig8} 
-          />
-        </nav>
+        {/* Exercise Grid */}
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {exercises.map((ex) => (
+            <motion.div
+              key={ex.id}
+              whileHover={{ y: -5 }}
+              className="bg-bg-card border border-white/5 rounded-[2.5rem] p-8 text-left group relative overflow-hidden shadow-2xl flex flex-col h-full"
+            >
+              <div className={`absolute top-0 right-0 w-48 h-48 bg-gradient-to-br ${ex.color} opacity-5 blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:opacity-10 transition-opacity`} />
+              
+              <div className="relative z-10 flex-1 space-y-6">
+                <div className="flex items-start justify-between">
+                  <div className={`w-14 h-14 bg-gradient-to-br ${ex.color} rounded-2xl flex items-center justify-center text-white shadow-xl shadow-accent/20`}>
+                    {ex.icon}
+                  </div>
+                  <div className="bg-accent-3/10 text-accent-3 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-accent-3/20">
+                    +{ex.points} PTS
+                  </div>
+                </div>
 
-        {/* Exercise Panels */}
-        <div className="relative">
-          <AnimatePresence mode="wait">
-            {activeTab === '2020' && (
-              <ExercisePanel 
-                key="2020"
-                label={t.ex01Label}
-                title={t.ex01Title}
-                desc={t.ex01Desc}
-                steps={t.ex01Steps}
-              >
-                <Timer2020 onComplete={() => {
-                  awardPoints(10);
-                  showNotif(t.notifComplete.replace('{pts}', '10'), <CheckCircle2 size={18} />);
-                  playAlert();
-                }} playAlert={playAlert} t={t} />
-              </ExercisePanel>
-            )}
+                <div>
+                  <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent mb-2">{ex.label}</div>
+                  <h3 className="text-2xl font-extrabold tracking-tight mb-3">{ex.title}</h3>
+                  <p className="text-text-lo text-sm leading-relaxed line-clamp-3">{ex.desc}</p>
+                </div>
 
-            {activeTab === 'nearfar' && (
-              <ExercisePanel 
-                key="nearfar"
-                label={t.ex02Label}
-                title={t.ex02Title}
-                desc={t.ex02Desc}
-                steps={t.ex02Steps}
-              >
-                <NearFarExercise onComplete={() => {
-                  awardPoints(15);
-                  showNotif(t.notifNearFar, <CheckCircle2 size={18} />);
-                  playAlert();
-                }} t={t} />
-              </ExercisePanel>
-            )}
+                <div className="pt-4 border-t border-white/5">
+                  <button 
+                    onClick={() => setActiveTab(ex.id)}
+                    className={`w-full bg-gradient-to-r ${ex.color} text-white py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-accent/20`}
+                  >
+                    <Play size={18} fill="currentColor" />
+                    {t.startFocus || 'Play Activity'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </section>
 
-            {activeTab === 'fig8' && (
-              <ExercisePanel 
-                key="fig8"
-                label={t.ex03Label}
-                title={t.ex03Title}
-                desc={t.ex03Desc}
-                steps={t.ex03Steps}
-              >
-                <Figure8Exercise onComplete={() => {
-                  awardPoints(20);
-                  showNotif(t.notifFig8, <CheckCircle2 size={18} />);
-                  playAlert();
-                }} t={t} />
-              </ExercisePanel>
-            )}
-          </AnimatePresence>
-        </div>
+        {/* Fullscreen Exercise Overlay */}
+        <AnimatePresence>
+          {activeTab && (
+            <FullscreenActivity 
+              exercise={exercises.find(e => e.id === activeTab)!}
+              onClose={() => setActiveTab(null)}
+              t={t}
+              awardPoints={awardPoints}
+              showNotif={showNotif}
+              playAlert={playAlert}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Tips */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -521,6 +588,174 @@ export default function App() {
         </section>
       </main>
     </div>
+  );
+}
+
+function FullscreenActivity({ 
+  exercise, 
+  onClose, 
+  t, 
+  awardPoints, 
+  showNotif, 
+  playAlert 
+}: { 
+  exercise: Exercise; 
+  onClose: () => void; 
+  t: any; 
+  awardPoints: (p: number) => void; 
+  showNotif: (m: string, i: React.ReactNode) => void;
+  playAlert: (f?: number, d?: number) => void;
+}) {
+  const [isStarted, setIsStarted] = useState(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[200] bg-bg-deep flex flex-col overflow-hidden"
+    >
+      {/* Header - Hidden when started for minimalist feel */}
+      {!isStarted && (
+        <header className="flex items-center justify-between p-6 md:px-12 border-b border-white/5 bg-bg-card/30 backdrop-blur-md">
+          <button 
+            onClick={onClose}
+            className="flex items-center gap-3 text-text-lo hover:text-text-hi transition-colors group"
+          >
+            <div className="w-10 h-10 rounded-full bg-bg-card border border-white/5 flex items-center justify-center group-hover:bg-bg-mid">
+              <ArrowLeft size={20} />
+            </div>
+            <span className="text-sm font-bold uppercase tracking-widest">{t.home || 'Home'}</span>
+          </button>
+          <div className="flex items-center gap-4">
+            <div className={`w-10 h-10 bg-gradient-to-br ${exercise.color} rounded-xl flex items-center justify-center text-white shadow-lg`}>
+              {exercise.icon}
+            </div>
+            <h2 className="text-xl font-bold tracking-tight">{exercise.title}</h2>
+          </div>
+        </header>
+      )}
+
+      {/* Main Content Area */}
+      <div className="flex-1 relative flex flex-col items-center justify-center p-6 md:p-12 overflow-y-auto custom-scrollbar">
+        <AnimatePresence mode="wait">
+          {!isStarted ? (
+            <motion.div 
+              key="intro"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="max-w-2xl w-full space-y-10 text-center"
+            >
+              <div className="space-y-4">
+                <div className="text-xs font-mono uppercase tracking-[0.3em] text-accent">{exercise.label}</div>
+                <h3 className="text-4xl md:text-5xl font-extrabold tracking-tighter">{exercise.title}</h3>
+                <p className="text-text-mid text-lg leading-relaxed">{exercise.desc}</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                {exercise.steps.map((step, i) => (
+                  <div key={i} className="bg-bg-card/50 border border-white/5 p-4 rounded-2xl flex gap-4 items-start">
+                    <span className="w-6 h-6 min-w-[24px] bg-accent text-white rounded-full flex items-center justify-center text-xs font-bold font-mono">
+                      {i + 1}
+                    </span>
+                    <p className="text-sm text-text-mid leading-relaxed">{step}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-6 flex flex-col items-center gap-4">
+                <button 
+                  onClick={() => setIsStarted(true)}
+                  className={`bg-gradient-to-r ${exercise.color} text-white px-12 py-5 rounded-[2rem] font-bold text-lg flex items-center gap-4 hover:scale-105 transition-all shadow-2xl shadow-accent/20`}
+                >
+                  <Play size={24} fill="currentColor" />
+                  {t.startFocus || 'Start Activity'}
+                </button>
+                <div className="flex items-center gap-2 text-text-lo text-xs">
+                  <Info size={14} />
+                  <span>Tip: Rotate device horizontally for better experience</span>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="activity"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full h-full flex flex-col items-center justify-center"
+            >
+              {/* Minimalist Close Button */}
+              <button 
+                onClick={() => setIsStarted(false)}
+                className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-text-lo transition-all z-[210]"
+              >
+                <ArrowLeft size={24} />
+              </button>
+
+              <div className="w-full max-w-4xl">
+                {exercise.id === '2020' && (
+                  <Timer2020 onComplete={() => {
+                    awardPoints(10);
+                    showNotif(t.notifComplete.replace('{pts}', '10'), <CheckCircle2 size={18} />);
+                    playAlert();
+                    setIsStarted(false);
+                  }} playAlert={playAlert} t={t} autoStart={true} minimalist={true} />
+                )}
+                {exercise.id === 'nearfar' && (
+                  <NearFarExercise onComplete={() => {
+                    awardPoints(15);
+                    showNotif(t.notifNearFar, <CheckCircle2 size={18} />);
+                    playAlert();
+                    setIsStarted(false);
+                  }} t={t} autoStart={true} minimalist={true} />
+                )}
+                {exercise.id === 'fig8' && (
+                  <Figure8Exercise onComplete={() => {
+                    awardPoints(20);
+                    showNotif(t.notifFig8, <CheckCircle2 size={18} />);
+                    playAlert();
+                    setIsStarted(false);
+                  }} t={t} autoStart={true} minimalist={true} />
+                )}
+                {exercise.id === 'colorblind' && (
+                  <ColorBlindnessTest onComplete={() => {
+                    awardPoints(25);
+                    showNotif(t.notifColor, <CheckCircle2 size={18} />);
+                    playAlert();
+                    setIsStarted(false);
+                  }} t={t} minimalist={true} />
+                )}
+                {exercise.id === 'astigmatism' && (
+                  <AstigmatismTest onComplete={() => {
+                    awardPoints(25);
+                    showNotif(t.notifAstig, <CheckCircle2 size={18} />);
+                    playAlert();
+                    setIsStarted(false);
+                  }} t={t} minimalist={true} />
+                )}
+                {exercise.id === 'illusion' && (
+                  <IllusionExercise onComplete={() => {
+                    awardPoints(20);
+                    showNotif(t.notifIllusion, <CheckCircle2 size={18} />);
+                    playAlert();
+                    setIsStarted(false);
+                  }} t={t} minimalist={true} />
+                )}
+                {exercise.id === 'zigzag' && (
+                  <ZigzagExercise onComplete={() => {
+                    awardPoints(20);
+                    showNotif(t.notifZigzag, <CheckCircle2 size={18} />);
+                    playAlert();
+                    setIsStarted(false);
+                  }} t={t} minimalist={true} />
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
   );
 }
 
@@ -536,58 +771,9 @@ function StatCard({ value, label, icon }: { value: string | number; label: strin
   );
 }
 
-function TabButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
-  return (
-    <button 
-      onClick={onClick}
-      className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all ${
-        active 
-          ? 'bg-gradient-to-br from-accent to-accent-2 text-white shadow-lg shadow-accent/20' 
-          : 'text-text-lo hover:bg-bg-mid hover:text-text-hi'
-      }`}
-    >
-      {icon}
-      <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
-    </button>
-  );
-}
-
-function ExercisePanel({ label, title, desc, steps, children }: { label: string; title: string; desc: string; steps: string[]; children: React.ReactNode; key?: string }) {
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="bg-bg-card border border-white/5 rounded-3xl p-6 md:p-10 relative overflow-hidden shadow-xl"
-    >
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-30" />
-      <div className="space-y-6">
-        <header>
-          <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent mb-2">{label}</div>
-          <h3 className="text-2xl font-extrabold tracking-tight mb-2">{title}</h3>
-          <p className="text-text-mid text-sm leading-relaxed max-w-xl">{desc}</p>
-        </header>
-
-        <div className="bg-accent/5 border border-accent/10 rounded-2xl p-5 space-y-3">
-          {steps.map((step, i) => (
-            <div key={i} className="flex gap-3 text-xs md:text-sm text-text-mid leading-relaxed">
-              <span className="w-5 h-5 min-w-[20px] bg-accent text-white rounded-full flex items-center justify-center text-[10px] font-bold font-mono mt-0.5">
-                {i + 1}
-              </span>
-              {step}
-            </div>
-          ))}
-        </div>
-
-        {children}
-      </div>
-    </motion.div>
-  );
-}
-
-function Timer2020({ onComplete, playAlert, t }: { onComplete: () => void; playAlert: (f?: number, d?: number) => void; t: any }) {
+function Timer2020({ onComplete, playAlert, t, autoStart = false, minimalist = false }: { onComplete: () => void; playAlert: (f?: number, d?: number) => void; t: any; autoStart?: boolean; minimalist?: boolean }) {
   const [timeLeft, setTimeLeft] = useState(1200);
-  const [isActive, setIsActive] = useState(false);
+  const [isActive, setIsActive] = useState(autoStart);
   const [isBreak, setIsBreak] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -646,23 +832,25 @@ function Timer2020({ onComplete, playAlert, t }: { onComplete: () => void; playA
         </div>
       </div>
 
-      <div className="flex gap-3">
-        {!isActive ? (
-          <button onClick={() => setIsActive(true)} className="bg-accent text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-accent/20">
-            <Play size={16} /> {t.startSession}
-          </button>
-        ) : (
-          <button onClick={() => setIsActive(false)} className="bg-bg-mid text-text-hi border border-white/5 px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
-            <Square size={16} /> {t.stop}
-          </button>
-        )}
-      </div>
+      {!minimalist && (
+        <div className="flex gap-3">
+          {!isActive ? (
+            <button onClick={() => setIsActive(true)} className="bg-accent text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-accent/20">
+              <Play size={16} /> {t.startSession}
+            </button>
+          ) : (
+            <button onClick={() => setIsActive(false)} className="bg-bg-mid text-text-hi border border-white/5 px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
+              <Square size={16} /> {t.stop}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function NearFarExercise({ onComplete, t }: { onComplete: () => void; t: any }) {
-  const [isActive, setIsActive] = useState(false);
+function NearFarExercise({ onComplete, t, autoStart = false, minimalist = false }: { onComplete: () => void; t: any; autoStart?: boolean; minimalist?: boolean }) {
+  const [isActive, setIsActive] = useState(autoStart);
   const [timeLeft, setTimeLeft] = useState(60);
   const [phase, setPhase] = useState<'near' | 'far'>('near');
   const [objectIndex, setObjectIndex] = useState(0);
@@ -801,26 +989,28 @@ function NearFarExercise({ onComplete, t }: { onComplete: () => void; t: any }) 
           />
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="text-2xl font-mono font-bold text-text-hi">{timeLeft}s</div>
-          <div className="h-4 w-[1px] bg-white/10" />
-          {!isActive ? (
-            <button onClick={() => { setIsActive(true); setTimeLeft(60); }} className="bg-accent text-white px-10 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-accent/20">
-              <Play size={16} /> {t.startFocus}
-            </button>
-          ) : (
-            <button onClick={() => setIsActive(false)} className="bg-bg-mid text-text-hi border border-white/5 px-10 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
-              <Square size={16} /> {t.stop}
-            </button>
-          )}
-        </div>
+        {!minimalist && (
+          <div className="flex items-center gap-4">
+            <div className="text-2xl font-mono font-bold text-text-hi">{timeLeft}s</div>
+            <div className="h-4 w-[1px] bg-white/10" />
+            {!isActive ? (
+              <button onClick={() => { setIsActive(true); setTimeLeft(60); }} className="bg-accent text-white px-10 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-accent/20">
+                <Play size={16} /> {t.startFocus}
+              </button>
+            ) : (
+              <button onClick={() => setIsActive(false)} className="bg-bg-mid text-text-hi border border-white/5 px-10 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
+                <Square size={16} /> {t.stop}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function Figure8Exercise({ onComplete, t }: { onComplete: () => void; t: any }) {
-  const [isPlaying, setIsPlaying] = useState(false);
+function Figure8Exercise({ onComplete, t, autoStart = false, minimalist = false }: { onComplete: () => void; t: any; autoStart?: boolean; minimalist?: boolean }) {
+  const [isPlaying, setIsPlaying] = useState(autoStart);
 
   return (
     <div className="flex flex-col items-center gap-8">
@@ -837,19 +1027,212 @@ function Figure8Exercise({ onComplete, t }: { onComplete: () => void; t: any }) 
         <div className={`w-5 h-5 bg-gradient-to-br from-accent to-accent-2 rounded-full shadow-lg shadow-accent/40 absolute ${isPlaying ? 'fig8-dot-anim' : 'top-1/2 left-[20%] -translate-x-1/2 -translate-y-1/2'}`} />
       </div>
 
-      <div className="flex gap-3">
-        {!isPlaying ? (
-          <button onClick={() => setIsPlaying(true)} className="bg-accent text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
-            <Play size={16} /> {t.playDot}
+      {!minimalist && (
+        <div className="flex gap-3">
+          {!isPlaying ? (
+            <button onClick={() => setIsPlaying(true)} className="bg-accent text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
+              <Play size={16} /> {t.playDot}
+            </button>
+          ) : (
+            <button onClick={() => setIsPlaying(false)} className="bg-bg-mid text-text-hi border border-white/5 px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
+              <Pause size={16} /> {t.pause}
+            </button>
+          )}
+          <button onClick={onComplete} className="bg-accent-3/10 text-accent-3 border border-accent-3/20 px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
+            <CheckCircle2 size={16} /> {t.done}
           </button>
-        ) : (
-          <button onClick={() => setIsPlaying(false)} className="bg-bg-mid text-text-hi border border-white/5 px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
-            <Pause size={16} /> {t.pause}
-          </button>
-        )}
-        <button onClick={onComplete} className="bg-accent-3/10 text-accent-3 border border-accent-3/20 px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
-          <CheckCircle2 size={16} /> {t.done}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ColorBlindnessTest({ onComplete, t, minimalist = false }: { onComplete: () => void; t: any; minimalist?: boolean }) {
+  const [step, setStep] = useState(0);
+  const [score, setScore] = useState(0);
+  const [showResult, setShowResult] = useState(false);
+
+  const plates = [
+    { number: 12, colors: ['#e11d48', '#10b981'], dots: 150 },
+    { number: 8, colors: ['#f59e0b', '#3b82f6'], dots: 150 },
+    { number: 6, colors: ['#8b5cf6', '#ec4899'], dots: 150 },
+    { number: 29, colors: ['#10b981', '#f43f5e'], dots: 150 },
+  ];
+
+  const handleAnswer = (num: number) => {
+    if (num === plates[step].number) setScore(s => s + 1);
+    if (step < plates.length - 1) {
+      setStep(s => s + 1);
+    } else {
+      setShowResult(true);
+    }
+  };
+
+  if (showResult) {
+    return (
+      <div className="flex flex-col items-center gap-6 text-center">
+        <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center text-accent mb-2">
+          <Trophy size={40} />
+        </div>
+        <h3 className="text-2xl font-bold">{t.done}</h3>
+        <p className="text-text-lo">Score: {score} / {plates.length}</p>
+        <button onClick={onComplete} className="bg-accent text-white px-10 py-3 rounded-full font-bold text-sm shadow-lg shadow-accent/20">
+          {t.done}
         </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-8 w-full max-w-md">
+      <div className="relative w-64 h-64 rounded-full bg-bg-mid overflow-hidden border border-white/5 flex items-center justify-center">
+        <div className="grid grid-cols-10 gap-1 p-4">
+          {Array.from({ length: 100 }).map((_, i) => {
+            const isNumber = Math.random() > 0.5; 
+            return (
+              <div 
+                key={i} 
+                className="w-4 h-4 rounded-full" 
+                style={{ 
+                  backgroundColor: isNumber ? plates[step].colors[0] : plates[step].colors[1],
+                  opacity: 0.6 + Math.random() * 0.4,
+                  transform: `scale(${0.8 + Math.random() * 0.4})`
+                }} 
+              />
+            );
+          })}
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+           <span className="text-6xl font-bold opacity-10 select-none" style={{ color: plates[step].colors[0] }}>{plates[step].number}</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 w-full">
+        {[plates[step].number, plates[step].number + 5, plates[step].number - 3, 0].sort((a, b) => a - b).map(n => (
+          <button 
+            key={n}
+            onClick={() => handleAnswer(n)}
+            className="bg-bg-card border border-white/5 hover:border-accent/50 py-4 rounded-2xl font-bold transition-all active:scale-95"
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AstigmatismTest({ onComplete, t, minimalist = false }: { onComplete: () => void; t: any; minimalist?: boolean }) {
+  return (
+    <div className="flex flex-col items-center gap-8 w-full max-w-lg">
+      <div className="relative w-full aspect-square max-w-[400px] flex items-center justify-center">
+        <div className="absolute inset-0 border-4 border-white/10 rounded-full" />
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div 
+            key={i}
+            className="absolute w-1 h-full bg-text-hi/20"
+            style={{ transform: `rotate(${i * 15}deg)` }}
+          >
+            <div className="h-1/2 w-full bg-text-hi" />
+          </div>
+        ))}
+        <div className="w-4 h-4 bg-accent rounded-full z-10" />
+      </div>
+
+      <div className="text-center space-y-4">
+        <p className="text-sm text-text-lo max-w-xs mx-auto">
+          {t.ex05Steps[1]}
+        </p>
+        <button onClick={onComplete} className="bg-accent text-white px-10 py-3 rounded-full font-bold text-sm shadow-lg shadow-accent/20">
+          {t.done}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function IllusionExercise({ onComplete, t, minimalist = false }: { onComplete: () => void; t: any; minimalist?: boolean }) {
+  return (
+    <div className="flex flex-col items-center gap-12 w-full max-w-2xl">
+      <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0 rounded-full overflow-hidden"
+          style={{
+            background: `repeating-conic-gradient(
+              from 0deg,
+              #000 0deg 10deg,
+              #fff 10deg 20deg
+            )`
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-tr from-accent/20 to-transparent rounded-full mix-blend-overlay" />
+        <div className="w-4 h-4 bg-accent rounded-full z-10 shadow-lg shadow-accent/50" />
+      </div>
+
+      <div className="text-center space-y-6">
+        <p className="text-text-mid max-w-sm mx-auto leading-relaxed">
+          {t.ex06Steps[0]}
+        </p>
+        <button 
+          onClick={onComplete}
+          className="bg-accent text-white px-10 py-4 rounded-full font-bold text-sm shadow-xl shadow-accent/20 hover:scale-105 transition-transform active:scale-95"
+        >
+          {t.done}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ZigzagExercise({ onComplete, t, minimalist = false }: { onComplete: () => void; t: any; minimalist?: boolean }) {
+  const [isPlaying, setIsPlaying] = useState(true);
+
+  return (
+    <div className="flex flex-col items-center gap-12 w-full max-w-3xl">
+      <div className="relative w-full aspect-[2/1] bg-bg-mid/30 rounded-3xl border border-white/5 overflow-hidden flex items-center justify-center">
+        <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 800 400" preserveAspectRatio="none">
+          <path 
+            d="M 0 200 L 100 100 L 200 300 L 300 100 L 400 300 L 500 100 L 600 300 L 700 100 L 800 200"
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="4"
+            className="text-accent"
+          />
+        </svg>
+
+        <motion.div 
+          animate={isPlaying ? {
+            x: [0, 100, 200, 300, 400, 500, 600, 700, 800],
+            y: [200, 100, 300, 100, 300, 100, 300, 100, 200]
+          } : {}}
+          transition={{ 
+            duration: 4, 
+            repeat: Infinity, 
+            ease: "linear",
+          }}
+          className="w-6 h-6 bg-accent rounded-full shadow-lg shadow-accent/40 absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2"
+        />
+      </div>
+
+      <div className="flex flex-col items-center gap-6">
+        <p className="text-text-mid text-sm">{t.ex07Steps[0]}</p>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => setIsPlaying(!isPlaying)}
+            className="bg-bg-card border border-white/10 px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2"
+          >
+            {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+            {isPlaying ? t.pause : t.startFocus}
+          </button>
+          <button 
+            onClick={onComplete}
+            className="bg-accent text-white px-8 py-3 rounded-full font-bold text-sm shadow-lg shadow-accent/20"
+          >
+            {t.done}
+          </button>
+        </div>
       </div>
     </div>
   );

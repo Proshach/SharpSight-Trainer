@@ -73,7 +73,44 @@ export const translations: Record<string, any> = {
     badge90: "90 Day Streak",
     language: "Language",
     near: "Near",
-    far: "Far"
+    far: "Far",
+    home: "Home",
+    ex04Label: "Exercise 04 · Color",
+    ex04Title: "Color Blindness Test",
+    ex04Desc: "Check your color perception with Ishihara-style plates.",
+    ex04Steps: [
+      "Look at the plate on the screen.",
+      "Identify the number hidden in the dots.",
+      "Select the correct number from the options."
+    ],
+    ex05Label: "Exercise 05 · Clarity",
+    ex05Title: "Astigmatism Test",
+    ex05Desc: "Check for astigmatism using a standardized fan chart.",
+    ex05Steps: [
+      "Cover one eye and look at the fan chart.",
+      "Check if some lines appear darker or blurrier than others.",
+      "Repeat with the other eye."
+    ],
+    notifColor: "Color test complete! +25 pts",
+    notifAstig: "Astigmatism test complete! +25 pts",
+    ex06Label: "Exercise 06 · Perception",
+    ex06Title: "Illusion Effects",
+    ex06Desc: "Train your brain and eyes to process complex visual patterns and illusions.",
+    ex06Steps: [
+      "Stare at the center of the illusion.",
+      "Observe how the pattern seems to move or change.",
+      "Blink and shift your focus to relax your eyes."
+    ],
+    ex07Label: "Exercise 07 · Agility",
+    ex07Title: "Zigzag Tracking",
+    ex07Desc: "Follow a fast-moving dot in a zigzag pattern to improve eye-tracking speed.",
+    ex07Steps: [
+      "Keep your head still and follow the dot.",
+      "Focus on the sharp turns of the zigzag.",
+      "Maintain focus as the speed increases."
+    ],
+    notifIllusion: "Illusion exercise complete! +20 pts",
+    notifZigzag: "Zigzag tracking complete! +20 pts"
   },
   es: {
     title: "EyeTrain 2.0",
@@ -149,7 +186,26 @@ export const translations: Record<string, any> = {
     badge90: "Racha de 90 Días",
     language: "Idioma",
     near: "Cerca",
-    far: "Lejos"
+    far: "Lejos",
+    home: "Inicio",
+    ex04Label: "Ejercicio 04 · Color",
+    ex04Title: "Prueba de Daltonismo",
+    ex04Desc: "Comprueba tu percepción del color con las láminas de Ishihara.",
+    ex04Steps: [
+      "Mira la lámina en la pantalla.",
+      "Identifica el número oculto en los puntos.",
+      "Selecciona el número correcto de las opciones."
+    ],
+    ex05Label: "Ejercicio 05 · Claridad",
+    ex05Title: "Prueba de Astigmatismo",
+    ex05Desc: "Comprueba si tienes astigmatismo usando un gráfico de abanico estandarizado.",
+    ex05Steps: [
+      "Cubre un ojo y mira el gráfico de abanico.",
+      "Comprueba si algunas líneas aparecen más oscuras o borrosas que otras.",
+      "Repite con el otro ojo."
+    ],
+    notifColor: "¡Prueba de color completada! +25 pts",
+    notifAstig: "¡Prueba de astigmatismo completada! +25 pts"
   },
   fr: {
     title: "EyeTrain 2.0",
@@ -225,7 +281,26 @@ export const translations: Record<string, any> = {
     badge90: "Série de 90 Jours",
     language: "Langue",
     near: "Proche",
-    far: "Loin"
+    far: "Loin",
+    home: "Accueil",
+    ex04Label: "Exercice 04 · Couleur",
+    ex04Title: "Test de Daltonisme",
+    ex04Desc: "Vérifiez votre perception des couleurs avec les plaques d'Ishihara.",
+    ex04Steps: [
+      "Regardez la plaque sur l'écran.",
+      "Identifiez le nombre caché dans les points.",
+      "Sélectionnez le bon nombre parmi les options."
+    ],
+    ex05Label: "Exercice 05 · Clarté",
+    ex05Title: "Test d'Astigmatisme",
+    ex05Desc: "Vérifiez l'astigmatisme à l'aide d'un cadran de Parent standardisé.",
+    ex05Steps: [
+      "Couvrez un œil et regardez le cadran.",
+      "Vérifiez si certaines lignes apparaissent plus sombres ou plus floues que d'autres.",
+      "Répétez avec l'autre œil."
+    ],
+    notifColor: "Test de couleur terminé ! +25 pts",
+    notifAstig: "Test d'astigmatisme terminé ! +25 pts"
   },
   de: {
     title: "EyeTrain 2.0",
@@ -301,7 +376,26 @@ export const translations: Record<string, any> = {
     badge90: "90-Tage-Serie",
     language: "Sprache",
     near: "Nah",
-    far: "Fern"
+    far: "Fern",
+    home: "Start",
+    ex04Label: "Übung 04 · Farbe",
+    ex04Title: "Farbenblindheitstest",
+    ex04Desc: "Überprüfen Sie Ihre Farbwahrnehmung mit Ishihara-Tafeln.",
+    ex04Steps: [
+      "Schauen Sie sich die Tafel auf dem Bildschirm an.",
+      "Identifizieren Sie die in den Punkten versteckte Zahl.",
+      "Wählen Sie die richtige Zahl aus den Optionen aus."
+    ],
+    ex05Label: "Übung 05 · Klarheit",
+    ex05Title: "Astigmatismus-Test",
+    ex05Desc: "Überprüfen Sie auf Astigmatismus mit einem standardisierten Fächerdiagramm.",
+    ex05Steps: [
+      "Decken Sie ein Auge ab und schauen Sie auf das Fächerdiagramm.",
+      "Prüfen Sie, ob einige Linien dunkler oder verschwommener erscheinen als andere.",
+      "Wiederholen Sie dies mit dem anderen Auge."
+    ],
+    notifColor: "Farbenblindheitstest abgeschlossen! +25 Pkt",
+    notifAstig: "Astigmatismus-Test abgeschlossen! +25 Pkt"
   },
   ja: {
     title: "EyeTrain 2.0",
@@ -377,7 +471,26 @@ export const translations: Record<string, any> = {
     badge90: "90日間継続",
     language: "言語",
     near: "近く",
-    far: "遠く"
+    far: "遠く",
+    home: "ホーム",
+    ex04Label: "エクササイズ 04 · カラー",
+    ex04Title: "色覚テスト",
+    ex04Desc: "石原式色覚異常検査表で色の見え方を確認します。",
+    ex04Steps: [
+      "画面上の検査表を見てください。",
+      "ドットの中に隠れている数字を特定します。",
+      "選択肢から正しい数字を選んでください。"
+    ],
+    ex05Label: "エクササイズ 05 · 明瞭度",
+    ex05Title: "乱視テスト",
+    ex05Desc: "標準的な放射状図表を使用して乱視の有無を確認します。",
+    ex05Steps: [
+      "片目を覆い、放射状の図表を見てください。",
+      "一部の線が他の線よりも濃く見えたり、ぼやけて見えたりしないか確認します。",
+      "もう片方の目でも繰り返します。"
+    ],
+    notifColor: "色覚テスト完了！ +25 ポイント",
+    notifAstig: "乱視テスト完了！ +25 ポイント"
   },
   pt: {
     title: "EyeTrain 2.0",
@@ -453,7 +566,8 @@ export const translations: Record<string, any> = {
     badge90: "Sequência de 90 Dias",
     language: "Idioma",
     near: "Perto",
-    far: "Longe"
+    far: "Longe",
+    home: "Início"
   },
   it: {
     title: "EyeTrain 2.0",
@@ -529,7 +643,8 @@ export const translations: Record<string, any> = {
     badge90: "Serie di 90 Giorni",
     language: "Lingua",
     near: "Vicino",
-    far: "Lontano"
+    far: "Lontano",
+    home: "Home"
   },
   zh: {
     title: "EyeTrain 2.0",
@@ -605,7 +720,8 @@ export const translations: Record<string, any> = {
     badge90: "90天连续",
     language: "语言",
     near: "近",
-    far: "远"
+    far: "远",
+    home: "首页"
   },
   ko: {
     title: "EyeTrain 2.0",
@@ -681,7 +797,8 @@ export const translations: Record<string, any> = {
     badge90: "90일 연속",
     language: "언어",
     near: "가까이",
-    far: "멀리"
+    far: "멀리",
+    home: "홈"
   },
   ar: {
     title: "EyeTrain 2.0",
@@ -757,7 +874,8 @@ export const translations: Record<string, any> = {
     badge90: "تتابع 90 يوماً",
     language: "اللغة",
     near: "قريب",
-    far: "بعيد"
+    far: "بعيد",
+    home: "الرئيسية"
   },
   ru: {
     title: "EyeTrain 2.0",
@@ -833,6 +951,7 @@ export const translations: Record<string, any> = {
     badge90: "90 дней подряд",
     language: "Язык",
     near: "Близко",
-    far: "Далеко"
+    far: "Далеко",
+    home: "Главная"
   }
 };
